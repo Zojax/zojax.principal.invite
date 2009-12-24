@@ -1,0 +1,68 @@
+<configure
+   xmlns="http://namespaces.zope.org/zope"
+   xmlns:zojax="http://namespaces.zope.org/zojax"
+   xmlns:browser="http://namespaces.zope.org/browser"
+   i18n_domain="zojax.principal.invite">
+
+  <!-- invitation configlet -->
+  <zojax:configlet
+     name="principals.invitations"
+     title="Invitations"
+     description="Members invitation configuration."
+     class=".configlet.Invitations"
+     schema=".interfaces.IInvitations">
+    <require
+       permission="zojax.Configure"
+       interface="zope.app.container.interfaces.IWriteContainer" />
+    <require
+       permission="zope.Public"
+       attributes="__delitem__"
+       interface="zojax.content.type.interfaces.IItem
+		  zope.app.container.interfaces.IReadContainer" />
+  </zojax:configlet>
+
+  <class class=".configlet.Invitations">
+    <implements
+       interface="zojax.content.type.interfaces.IContent" />
+    <implements
+       interface="zojax.content.type.interfaces.IContainerContentsAware" />
+    <implements
+       interface="zope.app.container.interfaces.IContainerNamesContainer" />
+  </class>
+
+  <subscriber handler=".configlet.objectRemovedEvent" />
+  <subscriber handler=".configlet.invitationAddedEvent" />
+  <subscriber handler=".configlet.invitationRemovedEvent" />
+
+  <!-- catalog -->
+  <class class=".catalog.InvitationsCatalog">
+    <implements interface="zojax.content.type.interfaces.IRenameNotAllowed" />
+    <implements interface="zojax.content.type.interfaces.IUnremoveableContent" />
+    <require
+       permission="zojax.Configure"
+       interface="zope.app.catalog.interfaces.ICatalogEdit
+		  zope.app.container.interfaces.IWriteContainer" />
+    <require
+       permission="zope.Public"
+       interface="zope.app.container.interfaces.IReadContainer" />
+  </class>
+
+  <subscriber handler=".catalog.handleCatalogAdded" />
+
+  <!-- invitation system -->
+  <browser:defaultView
+     name="context.html"
+     for=".interfaces.IInvitations" />
+
+  <zojax:pagelet
+     name="catalog"
+     title="Catalog"
+     type="wizard.step"
+     for=".interfaces.IInvitations
+	  zojax.content.forms.interfaces.IEditContentWizard"
+     template="view.pt"
+     class=".view.Advanced"
+     permission="zojax.Configure"
+     weight="200" />
+
+</configure>

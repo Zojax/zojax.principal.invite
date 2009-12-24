@@ -1,0 +1,23 @@
+<h2 i18n:translate="">Catalog statistics</h2>
+<br />
+
+<table class="z-table" summary="Indexes">
+  <tr>
+    <th i18n:translate="">Index</th>
+    <th i18n:translate="">Document Count</th>
+    <th i18n:translate="">Word Count</th>
+  </tr>
+  <tal:block tal:repeat="indexname view/catalog">
+    <tr tal:define="info python:view.getIndexInfo(indexname)"
+	tal:attributes="class python:repeat['indexname'].odd() and 'even' or 'odd'">
+      <td tal:content="indexname">foo</td>
+      <td tal:content="info/documents|default">-</td>
+      <td tal:content="info/words|default">-</td>
+    </tr>
+  </tal:block>
+</table>
+
+<div class="z-form-controls">
+  <input type="submit" value="Reindex" name="form.button.reindex"
+	 class="z-form-button" i18n:attributes="value reindex-button"/>
+</div>

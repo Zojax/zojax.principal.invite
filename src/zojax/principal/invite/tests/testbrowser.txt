@@ -1,0 +1,191 @@
+=====
+Tests
+=====
+
+    >>> from zope import component, interface, event
+    >>> from zope.proxy import removeAllProxies
+    >>> from zope.interface.verify import verifyClass, verifyObject
+    >>> from zope.lifecycleevent import ObjectCreatedEvent
+    >>> from zope.app.testing.functional import getRootFolder
+    >>> from zope.app.intid import IntIds
+    >>> from zope.app.intid.interfaces import IIntIds
+    >>> from zope.app.component.hooks import setSite
+    >>> from zope.testbrowser.testing import Browser
+    >>> from zojax.ownership.interfaces import IOwnership
+    >>> from zojax.principal.invite.tests.tests import Content
+
+    >>> root = getRootFolder()
+    >>> setSite(root)
+    >>> sm = root.getSiteManager()
+
+    >>> ids = IntIds()
+    >>> root['ids'] = ids
+    >>> sm.registerUtility(root['ids'], IIntIds)
+
+    >>> root['content'] = Content()
+
+    >>> from zojax.principal.invite.interfaces import IInvitation
+    >>> from zojax.principal.invite.invitation import Invitation, ObjectInvitation
+
+    >>> invitation = Invitation('zope.user2')
+    >>> IOwnership(invitation).ownerId = 'zope.user1'
+
+    >>> verifyClass(IInvitation, Invitation)
+    True
+    >>> verifyObject(IInvitation, invitation)
+    True
+
+    >>> invitation.expires
+    datetime.datetime(...)
+
+    >>> invitation.isExpired()
+    False
+
+    >>> from zojax.principal.invite.interfaces import IInvitations
+
+    >>> configlet = component.getUtility(IInvitations)
+
+    >>> verifyObject(IInvitations, configlet)
+    True
+
+    >>> configlet.expireDays
+    10
+
+    >>> print invitation.id
+    None
+    
+    >>> configlet.storeInvitation(invitation)
+
+    >>> invitation.id
+    u'...'
+
+    >>> removeAllProxies(configlet[invitation.id]) is invitation
+    True
+
+    >>> invitation2 = ObjectInvitation('zope.user2', ids.getId(root['content']))
+    >>> IOwnership(invitation2).ownerId = 'zope.user1'
+    >>> configlet.storeInvitation(invitation2)
+
+    >>> invitation2.object is root['content']
+    True
+
+    >>> invitations = configlet.getInvitationsByOwner('zope.user1')
+    >>> len(invitations)
+    2
+    >>> invitations[0].id == invitation.id
+    True
+    >>> invitations[1].id == invitation2.id
+    True
+
+    >>> tuple(configlet.getInvitationsByOwner('unknown'))
+    ()
+
+    >>> invitations = configlet.getInvitationsByPrincipal('zope.user2')
+    >>> len(invitations)
+    2
+    >>> invitations[0].id == invitation.id
+    True
+    >>> invitations[1].id == invitation2.id
+    True
+
+    >>> configlet.getInvitationsByObject(root['content'])[0].id == invitation2.id
+    True
+
+    >>> configlet.search(object=root['content'])[0].id == invitation2.id
+    True
+
+    >>> configlet.catalog.clear()
+    >>> configlet.catalog.updateIndexes()
+
+browse
+
+    >>> actor = Browser()
+    >>> actor.addHeader("Authorization", "Basic mgr:mgrpw")
+    >>> actor.handleErrors = False
+    >>> actor.open("http://localhost/settings/")
+    >>> actor.getLink('Invitations').click()
+    >>> print actor.contents
+    <!DOCTYPE html...
+    ...
+    ...<table class="z-table" summary="Indexes">
+      <tr>
+        <th>Index</th>
+        <th>Document Count</th>
+        <th>Word Count</th>
+      </tr>
+      <tr class="odd">
+        <td>created</td>
+        <td>0</td>
+        <td>0</td>
+      </tr>
+      <tr class="even">
+          <td>expires</td>
+          <td>2</td>
+          <td>2</td>
+      </tr>
+      <tr class="odd">
+          <td>object</td>
+          <td>1</td>
+          <td>1</td>
+      </tr>
+      <tr class="even">
+          <td>owner</td>
+          <td>2</td>
+          <td>1</td>
+      </tr>
+      <tr class="odd">
+          <td>principal</td>
+          <td>2</td>
+          <td>1</td>
+       </tr>
+       <tr class="even">
+          <td>type</td>
+          <td>0</td>
+          <td>0</td>
+       </tr>
+    </table>...
+    ...
+    </html>
+
+    >>> actor.getControl('Reindex').click()
+
+
+accept
+
+    >>> invitation.accept()
+    >>> invitation.__name__ in configlet
+    False
+
+    >>> invitations = configlet.getInvitationsByPrincipal('zope.user2')
+    >>> len(invitations)
+    1
+    >>> invitations[0].id == invitation2.id
+    True
+
+
+reject
+
+    >>> invitation2.reject()
+    >>> invitation2.id in configlet
+    False
+
+    >>> tuple(configlet.getInvitationsByOwner('zope.user1'))
+    ()
+
+    >>> tuple(configlet.getInvitationsByPrincipal('zope.user2'))
+    ()
+
+
+remove object
+
+    >>> configlet.storeInvitation(invitation2)
+
+    >>> invitations = configlet.getInvitationsByObject(root['content'])
+    >>> len(invitations)
+    1
+
+    >>> del root['content']
+    >>> invitation2.id in configlet
+    False
+
+    >>> setSite(None)
