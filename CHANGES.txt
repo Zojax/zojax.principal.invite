@@ -1,40 +1,8 @@
-=======
-CHANGES
-=======
-
-0.4.1 (Unreleased)
+1.0.2 (Unreleased)
 ------------------
 
 
-0.4.0 (2009-08-11)
+1.0.1 (2010-01-19)
 ------------------
 
-- Normalized datetime catalog index use
-
-- Copyright changed to 'Zope Foundation and Contributors'
-
-
-0.3.1 (2009-05-21)
-------------------
-
-- Added invitations catalog reindexing form
-
-
-0.3.0 (2009-05-05)
-------------------
-
-- API refactored, using catalog for invitation searching
-
-- Do not use z3c.autoinclude
-
-
-0.2.0 (2009-03-27)
-------------------
-
-- Send IInvitationProcessedEvent from process method
-
-
-0.1.0 (2009-03-24)
-------------------
-
-- Initial release
+- zojax initial release
