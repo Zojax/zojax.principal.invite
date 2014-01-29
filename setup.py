@@ -72,6 +72,7 @@ setup(name = 'zojax.principal.invite',
                                   'zope.testbrowser',
                                   'zope.app.zcmlfiles',
                                   'zojax.autoinclude',
+                                  'zojax.pageelement',
                                   ]),
       include_package_data = True,
       zip_safe = False
